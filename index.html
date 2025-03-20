@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مدیریت و جستجوی امتیازات</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin: 50px; }
+        input, button { margin: 10px; padding: 10px; }
+        #adminSection { display: none; }
+    </style>
+    <script>
+        let scores = JSON.parse(localStorage.getItem("scores")) || {};
+        const adminPassword = "1234";
+        
+        function generateNumericCode() {
+            return Math.floor(100 + Math.random() * 900).toString();
+        }
+        
+        function adminLogin() {
+            let pass = document.getElementById("adminPass").value;
+            if (pass === adminPassword) {
+                document.getElementById("adminControls").style.display = "block";
+                alert("ورود موفق! اکنون می‌توانید اطلاعات را مدیریت کنید.");
+            } else {
+                alert("رمز عبور اشتباه است!");
+            }
+        }
+        
+        function saveData() {
+            let name = document.getElementById("name").value;
+            let score = document.getElementById("score").value;
+            if (name && score) {
+                let code;
+                do {
+                    code = generateNumericCode();
+                } while (scores.hasOwnProperty(code));
+                
+                scores[code] = { name, score };
+                localStorage.setItem("scores", JSON.stringify(scores));
+                alert("کد کاربر: " + code);
+                displayScores();
+            } else {
+                alert("لطفا نام و امتیاز را وارد کنید");
+            }
+        }
+        
+        function searchData() {
+            let searchCode = document.getElementById("searchCode").value;
+            if (scores[searchCode]) {
+                document.getElementById("result").innerText = `نام: ${scores[searchCode].name} - امتیاز: ${scores[searchCode].score}`;
+            } else {
+                document.getElementById("result").innerText = "کدی یافت نشد";
+            }
+        }
+        
+        function displayScores() {
+            let list = document.getElementById("scoreList");
+            list.innerHTML = "";
+            for (let code in scores) {
+                list.innerHTML += `<li>کد: ${code} - نام: ${scores[code].name} - امتیاز: ${scores[code].score} 
+                    <button onclick="editScore('${code}')">ویرایش</button>
+                    <button onclick="deleteScore('${code}')">حذف</button>
+                </li>`;
+            }
+        }
+        
+        function editScore(code) {
+            let newName = prompt("نام جدید را وارد کنید", scores[code].name);
+            let newScore = prompt("امتیاز جدید را وارد کنید", scores[code].score);
+            if (newName && newScore) {
+                scores[code] = { name: newName, score: newScore };
+                localStorage.setItem("scores", JSON.stringify(scores));
+                displayScores();
+            }
+        }
+        
+        function deleteScore(code) {
+            if (confirm("آیا مطمئن هستید که می‌خواهید این امتیاز را حذف کنید؟")) {
+                delete scores[code];
+                localStorage.setItem("scores", JSON.stringify(scores));
+                displayScores();
+            }
+        }
+        
+        window.onload = displayScores;
+window.onload = function() {
+    document.getElementById("adminSection").style.display = "block";
+    displayScores();
+};
+
+    </script>
+</head>
+<body>
+    <div id="adminSection">
+        <h2>بخش مدیریت - ورود</h2>
+        <input type="password" id="adminPass" placeholder="رمز عبور ادمین">
+        <button onclick="adminLogin()">ورود</button>
+    </div>
+    
+    <div id="adminControls" style="display:none;">
+        <h2>مدیریت امتیازات</h2>
+        <input type="text" id="name" placeholder="نام">
+        <input type="number" id="score" placeholder="امتیاز">
+        <button onclick="saveData()">ثبت</button>
+        <h3>لیست امتیازات</h3>
+        <ul id="scoreList"></ul>
+    </div>
+    
+    <h2>جستجوی امتیاز</h2>
+    <input type="text" id="searchCode" placeholder="کد را وارد کنید">
+    <button onclick="searchData()">جستجو</button>
+    <p id="result"></p>
+</body>
+</html>
